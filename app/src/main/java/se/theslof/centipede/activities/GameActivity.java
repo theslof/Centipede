@@ -1,4 +1,4 @@
-package se.theslof.centipede;
+package se.theslof.centipede.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
