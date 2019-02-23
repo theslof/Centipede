@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
@@ -14,6 +15,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import se.theslof.centipede.R;
+import se.theslof.centipede.engine.Sprite;
+import se.theslof.centipede.engine.SpriteMap;
 
 public class GameView extends SurfaceView implements Runnable {
     Thread mainThread = null;
@@ -23,10 +26,9 @@ public class GameView extends SurfaceView implements Runnable {
     Paint paint;
     long fps;
     private long frameTime;
-    Bitmap bitmapCentipede;
+    Sprite centipede;
     boolean isMoving;
     float speed = 250;
-    float posx;
 
     private int frameWidth = 64;
     private int frameHeight = 64;
@@ -34,24 +36,14 @@ public class GameView extends SurfaceView implements Runnable {
     private int currentFrame = 0;
     private long lastFrameChangeTime = 0;
     private int frameLengthInMilliseconds = 1000 / 60;
-    private Rect frameToDraw = new Rect(
-            0,
-            0,
-            frameWidth,
-            frameHeight);
-    RectF whereToDraw = new RectF(
-            posx,
-            0,
-            posx + frameWidth,
-            frameHeight);
 
     public GameView(Context context) {
         super(context);
 
         holder = getHolder();
         paint = new Paint();
-        bitmapCentipede = BitmapFactory.decodeResource(this.getResources(), R.drawable.centipede);
-        bitmapCentipede = Bitmap.createScaledBitmap(bitmapCentipede, frameWidth * frameCount, frameHeight, false);
+        SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
+        centipede = new Sprite(centipedeMap, 0, 0);
     }
 
     @Override
@@ -73,7 +65,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void update() {
         if (isMoving) {
-            posx += speed / fps;
+            centipede.moveBy(new PointF(speed / fps, 0));
         }
     }
 
@@ -89,16 +81,7 @@ public class GameView extends SurfaceView implements Runnable {
 
             canvas.drawText("FPS: " + fps, 20, 40, paint);
 
-            whereToDraw.set((int)posx,
-                    0,
-                    (int)posx + frameWidth,
-                    frameHeight);
-
-            getCurrentFrame();
-
-            canvas.drawBitmap(bitmapCentipede,
-                    frameToDraw,
-                    whereToDraw, paint);
+            centipede.draw(canvas);
 
             holder.unlockCanvasAndPost(canvas);
         }
@@ -117,8 +100,8 @@ public class GameView extends SurfaceView implements Runnable {
                 }
             }
         }
-        frameToDraw.left = currentFrame * frameWidth;
-        frameToDraw.right = frameToDraw.left + frameWidth;
+//        frameToDraw.left = currentFrame * frameWidth;
+//        frameToDraw.right = frameToDraw.left + frameWidth;
 
     }
 
