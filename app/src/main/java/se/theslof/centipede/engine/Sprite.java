@@ -1,57 +1,42 @@
 package se.theslof.centipede.engine;
 
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
-public class Sprite {
+public abstract class Sprite {
     private SpriteMap spriteMap;
-    private int mapX;
-    private int mapY;
-    private float width;
-    private float height;
-    private float x = 0;
-    private float y = 0;
+    private RectF frame = new RectF();
+    private Rect subFrame = new Rect();
     private int zIndex = 0;
 
-    public Sprite(SpriteMap spriteMap, int mapX, int mapY) {
-        this(spriteMap, mapX, mapY, spriteMap.getFrameWidth(), spriteMap.getFrameHeight());
-    }
-
-    public Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
+    Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
         this.spriteMap = spriteMap;
-        this.mapX = mapX;
-        this.mapY = mapY;
-        this.width = width;
-        this.height = height;
+        this.frame.set(0,0, width, height);
+        this.subFrame.set(mapX, mapY, spriteMap.getFrameWidth(), spriteMap.getFrameHeight());
     }
 
     public void draw(Canvas canvas) {
-        Rect frameToDraw = new Rect(
-                mapX,
-                mapY,
-                mapX + spriteMap.getFrameWidth(),
-                mapY + spriteMap.getFrameHeight());
-        RectF whereToDraw = new RectF(
-                x,
-                y,
-                x + width,
-                y + height);
-
         canvas.drawBitmap(spriteMap.getBitmap(),
-                frameToDraw,
-                whereToDraw, null);
+                subFrame,
+                frame, null);
     }
 
     public void moveTo(PointF point) {
-        this.x = point.x;
-        this.y = point.y;
+        this.frame.set(
+                point.x, point.y,
+                point.x + this.frame.width(),
+                point.y + this.frame.height());
     }
 
     public void moveBy(PointF offset) {
-        this.x += offset.x;
-        this.y += offset.y;
+        this.frame.set(
+                this.frame.left + offset.x,
+                this.frame.top + offset.y,
+                this.frame.right + offset.x,
+                this.frame.bottom + offset.y);
     }
 
     public SpriteMap getSpriteMap() {
@@ -62,44 +47,25 @@ public class Sprite {
         this.spriteMap = spriteMap;
     }
 
-    public int getMapX() {
-        return mapX;
+    public RectF getFrame() {
+        return frame;
     }
 
-    public void setMapX(int mapX) {
-        this.mapX = mapX;
+    public void setFrame(RectF frame) {
+        this.frame = frame;
     }
 
-    public int getMapY() {
-        return mapY;
+    public Rect getSubFrame() {
+        return subFrame;
     }
 
-    public void setMapY(int mapY) {
-        this.mapY = mapY;
+    public void setSubFrame(Rect frame) {
+        this.subFrame = frame;
     }
 
-    public float getWidth() {
-        return width;
-    }
-
-    public void setWidth(float width) {
-        this.width = width;
-    }
-
-    public float getHeight() {
-        return height;
-    }
-
-    public void setHeight(float height) {
-        this.height = height;
-    }
-
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
+    public void setSize(float width, float height) {
+        this.frame.right = this.frame.left + width;
+        this.frame.bottom = this.frame.top + height;
     }
 
     public int getzIndex() {

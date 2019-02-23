@@ -14,9 +14,15 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import se.theslof.centipede.R;
 import se.theslof.centipede.engine.Sprite;
+import se.theslof.centipede.engine.SpriteAnimated;
+import se.theslof.centipede.engine.SpriteAnimationFrame;
 import se.theslof.centipede.engine.SpriteMap;
+import se.theslof.centipede.engine.SpriteStatic;
 
 public class GameView extends SurfaceView implements Runnable {
     Thread mainThread = null;
@@ -26,7 +32,7 @@ public class GameView extends SurfaceView implements Runnable {
     Paint paint;
     long fps;
     private long frameTime;
-    Sprite centipede;
+    SpriteAnimated centipede;
     boolean isMoving;
     float speed = 250;
 
@@ -43,7 +49,16 @@ public class GameView extends SurfaceView implements Runnable {
         holder = getHolder();
         paint = new Paint();
         SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
-        centipede = new Sprite(centipedeMap, 0, 0);
+        centipede = new SpriteAnimated(centipedeMap, Arrays.asList(
+                new SpriteAnimationFrame(0,0),
+                new SpriteAnimationFrame(64,0),
+                new SpriteAnimationFrame(128,0),
+                new SpriteAnimationFrame(192,0),
+                new SpriteAnimationFrame(256,0),
+                new SpriteAnimationFrame(320,0),
+                new SpriteAnimationFrame(384,0),
+                new SpriteAnimationFrame(448,0)
+        ));
     }
 
     @Override
@@ -66,6 +81,7 @@ public class GameView extends SurfaceView implements Runnable {
     private void update() {
         if (isMoving) {
             centipede.moveBy(new PointF(speed / fps, 0));
+            centipede.update(frameTime);
         }
     }
 
