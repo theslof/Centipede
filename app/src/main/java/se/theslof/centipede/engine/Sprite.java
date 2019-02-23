@@ -1,6 +1,9 @@
 package se.theslof.centipede.engine;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -11,6 +14,7 @@ public abstract class Sprite {
     private RectF frame = new RectF();
     private Rect subFrame = new Rect();
     private int zIndex = 0;
+    private double rotation = 0;
 
     Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
         this.spriteMap = spriteMap;
@@ -19,9 +23,13 @@ public abstract class Sprite {
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(spriteMap.getBitmap(),
-                subFrame,
-                frame, null);
+        Matrix matrix = new Matrix();
+        matrix.postRotate((float)(180 / Math.PI * rotation), this.frame.centerX(), this.frame.centerY());
+
+        Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height(), matrix, false);
+
+        canvas.drawBitmap(bitmap,
+                frame.left, frame.top, null);
     }
 
     public void moveTo(PointF point) {
@@ -37,6 +45,18 @@ public abstract class Sprite {
                 this.frame.top + offset.y,
                 this.frame.right + offset.x,
                 this.frame.bottom + offset.y);
+    }
+
+    public void setRotation(double angle) {
+        this.rotation = angle;
+    }
+
+    public void rotateBy(double angle) {
+        this.rotation += angle;
+    }
+
+    public double getRotation() {
+        return rotation;
     }
 
     public SpriteMap getSpriteMap() {

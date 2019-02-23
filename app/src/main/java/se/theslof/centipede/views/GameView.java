@@ -35,13 +35,7 @@ public class GameView extends SurfaceView implements Runnable {
     SpriteAnimated centipede;
     boolean isMoving;
     float speed = 250;
-
-    private int frameWidth = 64;
-    private int frameHeight = 64;
-    private int frameCount = 8;
-    private int currentFrame = 0;
-    private long lastFrameChangeTime = 0;
-    private int frameLengthInMilliseconds = 1000 / 60;
+    double direction = 0;
 
     public GameView(Context context) {
         super(context);
@@ -80,7 +74,8 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void update() {
         if (isMoving) {
-            centipede.moveBy(new PointF(speed / fps, 0));
+            centipede.setRotation(direction + Math.PI / 2);
+            centipede.moveBy(new PointF((float) Math.cos(direction) * speed / fps, (float) Math.sin(direction) * speed / fps));
             centipede.update(frameTime);
         }
     }
@@ -103,24 +98,6 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 
-    public void getCurrentFrame(){
-
-        long time  = System.currentTimeMillis();
-        if(isMoving) {
-            if ( time > lastFrameChangeTime + frameLengthInMilliseconds) {
-                lastFrameChangeTime = time;
-                currentFrame ++;
-                if (currentFrame >= frameCount) {
-
-                    currentFrame = 0;
-                }
-            }
-        }
-//        frameToDraw.left = currentFrame * frameWidth;
-//        frameToDraw.right = frameToDraw.left + frameWidth;
-
-    }
-
     public void pause() {
         playing = false;
         try {
@@ -140,6 +117,9 @@ public class GameView extends SurfaceView implements Runnable {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                updateDirection(event.getX(), event.getY());
+
                 isMoving = true;
                 break;
             case MotionEvent.ACTION_UP:
@@ -148,5 +128,12 @@ public class GameView extends SurfaceView implements Runnable {
         }
 
         return true;
+    }
+
+    private void updateDirection(float x, float y) {
+        float dx = x - centipede.getFrame().centerX();
+        float dy = y - centipede.getFrame().centerY();
+
+        direction = Math.atan2(dy, dx);
     }
 }
