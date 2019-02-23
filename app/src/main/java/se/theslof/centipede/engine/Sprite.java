@@ -23,13 +23,12 @@ public abstract class Sprite {
     }
 
     public void draw(Canvas canvas) {
+        Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height());
         Matrix matrix = new Matrix();
-        matrix.postRotate((float)(180 / Math.PI * rotation), this.frame.centerX(), this.frame.centerY());
+        matrix.postRotate((float)(180 / Math.PI * rotation), bitmap.getWidth() / 2.0f, bitmap.getHeight() / 2.0f);
+        matrix.postTranslate(this.frame.left, this.frame.top);
 
-        Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height(), matrix, false);
-
-        canvas.drawBitmap(bitmap,
-                frame.left, frame.top, null);
+        canvas.drawBitmap(bitmap, matrix, null);
     }
 
     public void moveTo(PointF point) {
