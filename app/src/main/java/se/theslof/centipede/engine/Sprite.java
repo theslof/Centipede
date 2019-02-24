@@ -14,7 +14,7 @@ public abstract class Sprite implements SpriteEngine.Drawable {
     private RectF frame = new RectF();
     private Rect subFrame = new Rect();
     private int zIndex = 0;
-    private double rotation = 0;
+    private float rotation = 0;
 
     Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
         this.spriteMap = spriteMap;
@@ -30,6 +30,7 @@ public abstract class Sprite implements SpriteEngine.Drawable {
         Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height());
         Matrix matrix = new Matrix();
         matrix.postRotate((float)(180 / Math.PI * (rotation + Math.PI / 2)), bitmap.getWidth() / 2.0f, bitmap.getHeight() / 2.0f);
+        matrix.postScale(this.frame.width() / this.subFrame.width(), this.frame.height() / this.subFrame.height());
         matrix.postTranslate(this.frame.left, this.frame.top);
 
         canvas.drawBitmap(bitmap, matrix, null);
@@ -50,15 +51,15 @@ public abstract class Sprite implements SpriteEngine.Drawable {
                 this.frame.bottom + offset.y);
     }
 
-    public void setRotation(double angle) {
+    public void setRotation(float angle) {
         this.rotation = angle;
     }
 
-    public void rotateBy(double angle) {
+    public void rotateBy(float angle) {
         this.rotation += angle;
     }
 
-    public double getRotation() {
+    public float getRotation() {
         return rotation;
     }
 

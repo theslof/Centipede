@@ -60,6 +60,7 @@ public class GameView extends SurfaceView implements Runnable {
 
         SpriteMap centipedeHead = new SpriteMap(this.getResources(), R.drawable.centipede_head, 64, 64, 64, 64);
         Sprite centipedeHeadSprite = new SpriteStatic(centipedeHead);
+        centipedeHeadSprite.setSize(128, 128);
         centipedeHeadSprite.setzIndex(1);
         gameLayer.addDrawable(centipedeHeadSprite);
         centipede.add(centipedeHeadSprite);
@@ -79,6 +80,7 @@ public class GameView extends SurfaceView implements Runnable {
             ));
             centipedeBody.setCurrentFrame(i % centipedeBody.getAnimationSequence().size());
             centipedeBody.setzIndex(-i);
+            centipedeBody.setSize(128, 128);
             centipedeBody.moveTo(targetPosition);
 
             gameLayer.addDrawable(centipedeBody);
@@ -114,7 +116,7 @@ public class GameView extends SurfaceView implements Runnable {
 
         double dist = Math.sqrt(dx * dx + dy * dy);
 
-        isMoving = dist > 50;
+        isMoving = dist >= 64;
 
         fpsLabel.setText("FPS: " + fps);
         if (fps < 15) {
@@ -173,9 +175,9 @@ public class GameView extends SurfaceView implements Runnable {
         float dx = targetPosition.x - head.getFrame().centerX();
         float dy = targetPosition.y - head.getFrame().centerY();
 
-        double angle = Math.min(Math.atan2(dy, dx) - head.getRotation(), Math.PI / 4);
+        float angle = (float)Math.atan2(dy, dx);
 
-        head.setRotation(head.getRotation() + angle);
+        head.setRotation(angle);
 
         head.moveBy(new PointF((float) Math.cos(head.getRotation()) * speed / fps, (float) Math.sin(head.getRotation()) * speed / fps));
 
@@ -183,15 +185,15 @@ public class GameView extends SurfaceView implements Runnable {
             Sprite last = centipede.get(i - 1);
             Sprite body = centipede.get(i);
 
-            PointF target = new PointF((float) (Math.cos(last.getRotation() + Math.PI) * 16) + last.getFrame().centerX(),
-                    (float) (Math.sin(last.getRotation() + Math.PI) * 16) + last.getFrame().centerY());
+            PointF target = new PointF(last.getFrame().centerX() + (float) (Math.cos(last.getRotation() + Math.PI) * body.getFrame().width() / 4.0),
+                    (float) (last.getFrame().centerY() + Math.sin(last.getRotation() + Math.PI) * body.getFrame().width() / 4.0));
 
             dx = target.x - body.getFrame().centerX();
             dy = target.y - body.getFrame().centerY();
 
-            angle = Math.min(Math.atan2(dy, dx) - body.getRotation(), Math.PI / 4);
+            angle = (float)Math.atan2(dy, dx);
 
-            body.setRotation(body.getRotation() + angle);
+            body.setRotation(angle);
 
             body.moveBy(new PointF((float) Math.cos(body.getRotation()) * speed / fps, (float) Math.sin(body.getRotation()) * speed / fps));
         }
