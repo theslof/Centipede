@@ -9,7 +9,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
-public abstract class Sprite {
+public abstract class Sprite implements SpriteEngine.Drawable {
     private SpriteMap spriteMap;
     private RectF frame = new RectF();
     private Rect subFrame = new Rect();
@@ -22,10 +22,14 @@ public abstract class Sprite {
         this.subFrame.set(mapX, mapY, spriteMap.getFrameWidth(), spriteMap.getFrameHeight());
     }
 
+    public void update(long frameTime) {
+        // No animation frames, do nothing
+    }
+
     public void draw(Canvas canvas) {
         Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height());
         Matrix matrix = new Matrix();
-        matrix.postRotate((float)(180 / Math.PI * rotation), bitmap.getWidth() / 2.0f, bitmap.getHeight() / 2.0f);
+        matrix.postRotate((float)(180 / Math.PI * (rotation + Math.PI / 2)), bitmap.getWidth() / 2.0f, bitmap.getHeight() / 2.0f);
         matrix.postTranslate(this.frame.left, this.frame.top);
 
         canvas.drawBitmap(bitmap, matrix, null);

@@ -22,6 +22,7 @@ public class SpriteAnimated extends Sprite {
         update(0);
     }
 
+    @Override
     public void update(long frameTime) {
         // No animation frames, do nothing
         if (animationSequence == null || animationSequence.size() <= 0) { return; }
@@ -63,12 +64,28 @@ public class SpriteAnimated extends Sprite {
         this.animationSequence = animationSequence;
     }
 
+    public long getFrameLength() {
+        return frameLengthInMilliseconds;
+    }
+
+    public void setFrameLength(long milliseconds) {
+        this.frameLengthInMilliseconds = milliseconds;
+    }
+
     public Repeat getRepeat() {
         return repeat;
     }
 
     public void setRepeat(Repeat repeat) {
         this.repeat = repeat;
+    }
+
+    public int getCurrentFrame() {
+        return currentFrame;
+    }
+
+    public void setCurrentFrame(int currentFrame) {
+        this.currentFrame = currentFrame;
     }
 
     public enum Repeat {

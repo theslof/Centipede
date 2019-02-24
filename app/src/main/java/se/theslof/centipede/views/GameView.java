@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -16,11 +17,15 @@ import android.view.SurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import se.theslof.centipede.R;
+import se.theslof.centipede.engine.Label;
 import se.theslof.centipede.engine.Sprite;
 import se.theslof.centipede.engine.SpriteAnimated;
 import se.theslof.centipede.engine.SpriteAnimationFrame;
+import se.theslof.centipede.engine.SpriteEngine;
+import se.theslof.centipede.engine.SpriteLayer;
 import se.theslof.centipede.engine.SpriteMap;
 import se.theslof.centipede.engine.SpriteStatic;
 
@@ -29,30 +34,61 @@ public class GameView extends SurfaceView implements Runnable {
     SurfaceHolder holder;
     volatile boolean playing;
     Canvas canvas;
-    Paint paint;
     long fps;
     private long frameTime;
-    SpriteAnimated centipede;
+    SpriteEngine engine = new SpriteEngine();
+    List<Sprite> centipede;
+    Label fpsLabel;
     boolean isMoving;
     float speed = 250;
-    double direction = 0;
+    PointF targetPosition = new PointF(200,200);
 
     public GameView(Context context) {
         super(context);
 
         holder = getHolder();
-        paint = new Paint();
+
+        SpriteLayer backgroundLayer = new SpriteLayer(0, "background");
+        SpriteLayer gameLayer = new SpriteLayer(1, "game");
+        SpriteLayer guiLayer = new SpriteLayer(2, "gui");
+
+        engine.addLayer(backgroundLayer);
+        engine.addLayer(gameLayer);
+        engine.addLayer(guiLayer);
+
+        centipede = new ArrayList<>();
+
+        SpriteMap centipedeHead = new SpriteMap(this.getResources(), R.drawable.centipede_head, 64, 64, 64, 64);
+        Sprite centipedeHeadSprite = new SpriteStatic(centipedeHead);
+        centipedeHeadSprite.setzIndex(1);
+        gameLayer.addDrawable(centipedeHeadSprite);
+        centipede.add(centipedeHeadSprite);
+        centipedeHeadSprite.moveTo(targetPosition);
+
         SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
-        centipede = new SpriteAnimated(centipedeMap, Arrays.asList(
-                new SpriteAnimationFrame(0,0),
-                new SpriteAnimationFrame(64,0),
-                new SpriteAnimationFrame(128,0),
-                new SpriteAnimationFrame(192,0),
-                new SpriteAnimationFrame(256,0),
-                new SpriteAnimationFrame(320,0),
-                new SpriteAnimationFrame(384,0),
-                new SpriteAnimationFrame(448,0)
-        ));
+        for (int i = 0; i < 20; i++) {
+            SpriteAnimated centipedeBody = new SpriteAnimated(centipedeMap, Arrays.asList(
+                    new SpriteAnimationFrame(0,0),
+                    new SpriteAnimationFrame(64,0),
+                    new SpriteAnimationFrame(128,0),
+                    new SpriteAnimationFrame(192,0),
+                    new SpriteAnimationFrame(256,0),
+                    new SpriteAnimationFrame(320,0),
+                    new SpriteAnimationFrame(384,0),
+                    new SpriteAnimationFrame(448,0)
+            ));
+            centipedeBody.setCurrentFrame(i % centipedeBody.getAnimationSequence().size());
+            centipedeBody.setzIndex(-i);
+            centipedeBody.moveTo(targetPosition);
+
+            gameLayer.addDrawable(centipedeBody);
+
+            centipede.add(centipedeBody);
+
+        }
+
+        fpsLabel = new Label("FPS: 0", new Point(20,40), Color.GREEN, 36);
+        guiLayer.addDrawable(fpsLabel);
     }
 
     @Override
@@ -73,10 +109,24 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void update() {
+        float dx = targetPosition.x - centipede.get(0).getFrame().left;
+        float dy = targetPosition.y - centipede.get(0).getFrame().top;
+
+        double dist = Math.sqrt(dx * dx + dy * dy);
+
+        isMoving = dist > 50;
+
+        fpsLabel.setText("FPS: " + fps);
+        if (fps < 15) {
+            fpsLabel.setTextColor(Color.RED);
+        } else if (fps < 30) {
+            fpsLabel.setTextColor(Color.YELLOW);
+        } else {
+            fpsLabel.setTextColor(Color.GREEN);
+        }
+
         if (isMoving) {
-            centipede.setRotation(direction + Math.PI / 2);
-            centipede.moveBy(new PointF((float) Math.cos(direction) * speed / fps, (float) Math.sin(direction) * speed / fps));
-            centipede.update(frameTime);
+            updateDirectionAndPosition();
         }
     }
 
@@ -84,15 +134,7 @@ public class GameView extends SurfaceView implements Runnable {
         if (holder.getSurface().isValid()) {
             canvas = holder.lockCanvas();
 
-            canvas.drawColor(Color.WHITE);
-
-            paint.setColor(Color.BLACK);
-
-            paint.setTextSize(24);
-
-            canvas.drawText("FPS: " + fps, 20, 40, paint);
-
-            centipede.draw(canvas);
+            engine.draw(canvas, isMoving ? frameTime : 0);
 
             holder.unlockCanvasAndPost(canvas);
         }
@@ -118,22 +160,41 @@ public class GameView extends SurfaceView implements Runnable {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                updateDirection(event.getX(), event.getY());
-
-                isMoving = true;
-                break;
-            case MotionEvent.ACTION_UP:
-                isMoving = false;
+                targetPosition = new PointF(event.getX(), event.getY());
                 break;
         }
 
         return true;
     }
 
-    private void updateDirection(float x, float y) {
-        float dx = x - centipede.getFrame().centerX();
-        float dy = y - centipede.getFrame().centerY();
+    private void updateDirectionAndPosition() {
+        Sprite head = centipede.get(0);
 
-        direction = Math.atan2(dy, dx);
+        float dx = targetPosition.x - head.getFrame().centerX();
+        float dy = targetPosition.y - head.getFrame().centerY();
+
+        double angle = Math.min(Math.atan2(dy, dx) - head.getRotation(), Math.PI / 4);
+
+        head.setRotation(head.getRotation() + angle);
+
+        head.moveBy(new PointF((float) Math.cos(head.getRotation()) * speed / fps, (float) Math.sin(head.getRotation()) * speed / fps));
+
+        for (int i = 1; i < centipede.size(); i++) {
+            Sprite last = centipede.get(i - 1);
+            Sprite body = centipede.get(i);
+
+            PointF target = new PointF((float) (Math.cos(last.getRotation() + Math.PI) * 16) + last.getFrame().centerX(),
+                    (float) (Math.sin(last.getRotation() + Math.PI) * 16) + last.getFrame().centerY());
+
+            dx = target.x - body.getFrame().centerX();
+            dy = target.y - body.getFrame().centerY();
+
+            angle = Math.min(Math.atan2(dy, dx) - body.getRotation(), Math.PI / 4);
+
+            body.setRotation(body.getRotation() + angle);
+
+            body.moveBy(new PointF((float) Math.cos(body.getRotation()) * speed / fps, (float) Math.sin(body.getRotation()) * speed / fps));
+        }
+
     }
 }
