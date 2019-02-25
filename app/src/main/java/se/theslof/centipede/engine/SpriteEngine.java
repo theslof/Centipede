@@ -16,9 +16,12 @@ public class SpriteEngine {
         canvas.drawColor(backgroundColor);
 
         layers.forEach(layer -> {
+            if (layer.isDisabled())
+                return;
             layer.getDrawables().forEach(drawable -> {
                 drawable.update(frameTime);
-                drawable.draw(canvas);
+                if (!layer.isHidden())
+                    drawable.draw(canvas);
             });
         });
     }
@@ -45,5 +48,9 @@ public class SpriteEngine {
         void update(long frameTime);
         void draw(Canvas canvas);
         int getzIndex();
+        boolean isDisabled();
+        void setDisabled(boolean disabled);
+        boolean isHidden();
+        void setHidden(boolean hidden);
     }
 }

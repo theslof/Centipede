@@ -1,15 +1,10 @@
 package se.theslof.centipede.views;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -19,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.github.controlwear.virtual.joystick.android.JoystickView;
 import se.theslof.centipede.R;
 import se.theslof.centipede.engine.Label;
 import se.theslof.centipede.engine.Sprite;
@@ -44,7 +40,8 @@ public class GameView extends SurfaceView implements Runnable {
     Label logTot;
     boolean isMoving;
     float speed = 250;
-    PointF targetPosition = new PointF(200,200);
+    float maxTurnSpeedPerSecond = (float)Math.PI * 1.5f;
+    PointF targetPosition = new PointF(400,600);
 
     public GameView(Context context) {
         super(context);
@@ -64,13 +61,14 @@ public class GameView extends SurfaceView implements Runnable {
         SpriteMap centipedeHead = new SpriteMap(this.getResources(), R.drawable.centipede_head, 64, 64, 64, 64);
         Sprite centipedeHeadSprite = new SpriteStatic(centipedeHead);
         centipedeHeadSprite.setSize(128, 128);
-        centipedeHeadSprite.setzIndex(1);
+        centipedeHeadSprite.setzIndex(0);
+        centipedeHeadSprite.setRotation((float)(-Math.PI / 2));
         gameLayer.addDrawable(centipedeHeadSprite);
         centipede.add(centipedeHeadSprite);
-        centipedeHeadSprite.moveTo(targetPosition);
+        centipedeHeadSprite.moveCenter(targetPosition);
 
         SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
-        for (int i = 0; i < 20; i++) {
+        for (int i = 1; i < 20; i++) {
             SpriteAnimated centipedeBody = new SpriteAnimated(centipedeMap, Arrays.asList(
                     new SpriteAnimationFrame(0,0),
                     new SpriteAnimationFrame(64,0),
@@ -84,7 +82,10 @@ public class GameView extends SurfaceView implements Runnable {
             centipedeBody.setCurrentFrame(i % centipedeBody.getAnimationSequence().size());
             centipedeBody.setzIndex(-i);
             centipedeBody.setSize(128, 128);
-            centipedeBody.moveTo(targetPosition);
+            centipedeBody.setRotation((float)(-Math.PI / 2));
+            centipedeBody.moveCenter(new PointF(
+                    targetPosition.x,
+                    targetPosition.y + centipedeBody.getFrame().height() / 3 * i));
 
             gameLayer.addDrawable(centipedeBody);
 
@@ -199,7 +200,7 @@ public class GameView extends SurfaceView implements Runnable {
         else if (da < -Math.PI)
             da += 2 * Math.PI;
 
-        da = (float)Math.max(Math.min(da, (Math.PI / fps)), -(Math.PI / fps));
+        da = (float)Math.max(Math.min(da, (maxTurnSpeedPerSecond / fps)), -(maxTurnSpeedPerSecond / fps));
 
         head.setRotation(head.getRotation() + da);
 
@@ -209,17 +210,35 @@ public class GameView extends SurfaceView implements Runnable {
             Sprite last = centipede.get(i - 1);
             Sprite body = centipede.get(i);
 
-            PointF target = new PointF(last.getFrame().centerX() + (float) (Math.cos(last.getRotation() + Math.PI) * body.getFrame().width() / 4.0),
-                    (float) (last.getFrame().centerY() + Math.sin(last.getRotation() + Math.PI) * body.getFrame().width() / 4.0));
+            float targetDistance = last.getFrame().width() / 4;
+
+            PointF target = new PointF(
+                    last.getFrame().centerX() + (float) (Math.cos(last.getRotation() + Math.PI) * targetDistance),
+                    last.getFrame().centerY() + (float) (Math.sin(last.getRotation() + Math.PI) * targetDistance));
 
             dx = target.x - body.getFrame().centerX();
             dy = target.y - body.getFrame().centerY();
 
+            float distance = (float)Math.sqrt(dx*dx+dy*dy);
+
             angle = (float)Math.atan2(dy, dx);
 
-            body.setRotation(angle);
+            da = angle - body.getRotation();
 
-            body.moveBy(new PointF((float) Math.cos(body.getRotation()) * speed / fps, (float) Math.sin(body.getRotation()) * speed / fps));
+            if (da > Math.PI)
+                da -= 2 * Math.PI;
+            else if (da < -Math.PI)
+                da += 2 * Math.PI;
+
+            da = (float)Math.max(Math.min(da, (maxTurnSpeedPerSecond / fps)), -(maxTurnSpeedPerSecond / fps));
+
+            body.setRotation(body.getRotation() + da);
+
+            body.moveCenter(new PointF(
+                    target.x + (float) (Math.cos(body.getRotation() + Math.PI) * targetDistance / 2),
+                    target.y + (float) (Math.sin(body.getRotation() + Math.PI) * targetDistance / 2)
+            ));
+//            body.moveBy(new PointF((float) Math.cos(body.getRotation()) * speed / fps, (float) Math.sin(body.getRotation()) * speed / fps));
         }
 
     }

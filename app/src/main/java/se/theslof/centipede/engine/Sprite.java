@@ -1,10 +1,8 @@
 package se.theslof.centipede.engine;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -15,6 +13,8 @@ public abstract class Sprite implements SpriteEngine.Drawable {
     private Rect subFrame = new Rect();
     private int zIndex = 0;
     private float rotation = 0;
+    private boolean disabled = false;
+    private boolean hidden = false;
 
     Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
         this.spriteMap = spriteMap;
@@ -27,6 +27,8 @@ public abstract class Sprite implements SpriteEngine.Drawable {
     }
 
     public void draw(Canvas canvas) {
+        if(disabled || hidden)
+            return;
         Bitmap bitmap = Bitmap.createBitmap(this.spriteMap.getBitmap(), this.subFrame.left, this.subFrame.top, this.subFrame.width(), this.subFrame.height());
         Matrix matrix = new Matrix();
         matrix.postRotate((float)(180 / Math.PI * (rotation + Math.PI / 2)), bitmap.getWidth() / 2.0f, bitmap.getHeight() / 2.0f);
@@ -41,6 +43,14 @@ public abstract class Sprite implements SpriteEngine.Drawable {
                 point.x, point.y,
                 point.x + this.frame.width(),
                 point.y + this.frame.height());
+    }
+
+    public void moveCenter(PointF point) {
+        this.frame.set(
+                point.x - this.frame.width() / 2,
+                point.y - this.frame.height() / 2,
+                point.x + this.frame.width() / 2,
+                point.y + this.frame.height() / 2);
     }
 
     public void moveBy(PointF offset) {
@@ -98,5 +108,25 @@ public abstract class Sprite implements SpriteEngine.Drawable {
 
     public void setzIndex(int zIndex) {
         this.zIndex = zIndex;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    @Override
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    @Override
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }

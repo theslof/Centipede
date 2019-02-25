@@ -12,6 +12,8 @@ public class Label implements SpriteEngine.Drawable {
     private String text;
     private Point position;
     private int zIndex = 0;
+    private boolean disabled;
+    private boolean hidden;
 
     public Label(String text) {
         this(text, new Point(), Color.BLACK, 12);
@@ -37,6 +39,8 @@ public class Label implements SpriteEngine.Drawable {
 
     @Override
     public void draw(Canvas canvas) {
+        if(disabled || hidden)
+            return;
         Paint paint = new Paint();
         paint.setColor(textColor);
         paint.setTextSize(fontSize);
@@ -83,5 +87,25 @@ public class Label implements SpriteEngine.Drawable {
 
     public void setzIndex(int zIndex) {
         this.zIndex = zIndex;
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    @Override
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    @Override
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }

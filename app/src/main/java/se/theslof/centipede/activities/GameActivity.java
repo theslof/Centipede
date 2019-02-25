@@ -12,6 +12,7 @@ public class GameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // TODO: Set gameView in layout and add joystick on top, then ref. joystick in code.
         gameView = new GameView(this);
         setContentView(gameView);
     }
