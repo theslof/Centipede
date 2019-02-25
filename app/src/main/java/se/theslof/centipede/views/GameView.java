@@ -34,11 +34,14 @@ public class GameView extends SurfaceView implements Runnable {
     SurfaceHolder holder;
     volatile boolean playing;
     Canvas canvas;
-    long fps;
+    long fps = 1;
     private long frameTime;
     SpriteEngine engine = new SpriteEngine();
     List<Sprite> centipede;
     Label fpsLabel;
+    Label logAngle;
+    Label logDA;
+    Label logTot;
     boolean isMoving;
     float speed = 250;
     PointF targetPosition = new PointF(200,200);
@@ -90,17 +93,27 @@ public class GameView extends SurfaceView implements Runnable {
         }
 
         fpsLabel = new Label("FPS: 0", new Point(20,40), Color.GREEN, 36);
+        logAngle = new Label("", new Point(20,80), Color.BLACK, 36);
+        logDA = new Label("", new Point(20,120), Color.BLACK, 36);
+        logTot = new Label("", new Point(20,160), Color.BLACK, 36);
         guiLayer.addDrawable(fpsLabel);
+        guiLayer.addDrawable(logAngle);
+        guiLayer.addDrawable(logDA);
+        guiLayer.addDrawable(logTot);
     }
 
     @Override
     public void run() {
         while (playing) {
             long startFrameTime = System.currentTimeMillis();
+            Sprite head = centipede.get(0);
 
+            Log.d("Before", head.getFrame().toString());
             update();
+            Log.d("After update", head.getFrame().toString());
 
             draw();
+            Log.d("After draw", head.getFrame().toString());
 
             frameTime = System.currentTimeMillis() - startFrameTime;
             if (frameTime > 0) {
@@ -111,8 +124,10 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void update() {
-        float dx = targetPosition.x - centipede.get(0).getFrame().left;
-        float dy = targetPosition.y - centipede.get(0).getFrame().top;
+        Sprite head = centipede.get(0);
+
+        float dx = targetPosition.x - head.getFrame().centerX();
+        float dy = targetPosition.y - head.getFrame().centerY();
 
         double dist = Math.sqrt(dx * dx + dy * dy);
 
@@ -177,7 +192,16 @@ public class GameView extends SurfaceView implements Runnable {
 
         float angle = (float)Math.atan2(dy, dx);
 
-        head.setRotation(angle);
+        float da = angle - head.getRotation();
+
+        if (da > Math.PI)
+            da -= 2 * Math.PI;
+        else if (da < -Math.PI)
+            da += 2 * Math.PI;
+
+        da = (float)Math.max(Math.min(da, (Math.PI / fps)), -(Math.PI / fps));
+
+        head.setRotation(head.getRotation() + da);
 
         head.moveBy(new PointF((float) Math.cos(head.getRotation()) * speed / fps, (float) Math.sin(head.getRotation()) * speed / fps));
 
