@@ -7,7 +7,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import io.github.controlwear.virtual.joystick.android.JoystickView;
 import se.theslof.centipede.R;
 import se.theslof.centipede.engine.Label;
 import se.theslof.centipede.engine.Sprite;
@@ -77,7 +75,7 @@ public class GameView extends SurfaceView implements Runnable {
         centipedeHeadSprite.moveCenter(new PointF(400, 600));
 
         SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
-        for (int i = 1; i < 20; i++) {
+        for (int i = 1; i < 19; i++) {
             SpriteAnimated centipedeBody = new SpriteAnimated(centipedeMap, Arrays.asList(
                     new SpriteAnimationFrame(0,0),
                     new SpriteAnimationFrame(64,0),
@@ -97,8 +95,17 @@ public class GameView extends SurfaceView implements Runnable {
             gameLayer.addDrawable(centipedeBody);
 
             centipede.add(centipedeBody);
-
         }
+
+        SpriteMap centipedeTail = new SpriteMap(this.getResources(), R.drawable.centipede_tail, 64, 64, 64, 64);
+        Sprite centipedeTailSprite = new SpriteStatic(centipedeTail);
+        centipedeTailSprite.setSize(128, 128);
+        centipedeTailSprite.setzIndex(-20);
+        centipedeTailSprite.setRotation(targetAngle);
+        gameLayer.addDrawable(centipedeTailSprite);
+        centipede.add(centipedeTailSprite);
+        centipedeTailSprite.moveCenter(new PointF(400, 1450));
+
 
         fpsLabel = new Label("FPS: 0", new Point(20,40), Color.GREEN, 36);
         logAngle = new Label("", new Point(20,80), Color.BLACK, 36);
