@@ -176,13 +176,17 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void updateDirectionAndPosition() {
         Sprite head = centipede.get(0);
+        float twopi = (float)(2 * Math.PI);
 
-        float da = targetAngle - head.getRotation();
+        logAngle.setText("Head angle: " + head.getRotation());
+        logDA.setText("Target angle: " + targetAngle);
+
+        float da = (targetAngle - head.getRotation() + twopi) % twopi;
 
         if (da > Math.PI)
-            da -= 2 * Math.PI;
+            da -= twopi;
         else if (da < -Math.PI)
-            da += 2 * Math.PI;
+            da += twopi;
 
         da = Math.max(Math.min(da, (maxTurnSpeedPerSecond / fps)), -(maxTurnSpeedPerSecond / fps));
 
