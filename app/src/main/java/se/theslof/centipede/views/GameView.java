@@ -34,13 +34,31 @@ public class GameView extends SurfaceView implements Runnable {
     SpriteEngine engine = new SpriteEngine();
     List<Sprite> centipede;
     Label fpsLabel;
-    Label logAngle;
-    Label logDA;
-    Label logTot;
     boolean isMoving = true;
     float speed = 250;
     float maxTurnSpeedPerSecond = (float)Math.PI * 1.5f;
-    float targetAngle = (float)(-Math.PI / 2);
+    float targetAngle = (float)(0);
+
+    long timeToNextApple = 0;
+
+    SpriteLayer backgroundLayer = new SpriteLayer(0, "background");
+    SpriteLayer gameLayer = new SpriteLayer(1, "game");
+    SpriteLayer guiLayer = new SpriteLayer(2, "gui");
+
+    Sprite centipedeHeadSprite;
+
+    List<SpriteAnimationFrame> bodyAnimationSequence = Arrays.asList(
+            new SpriteAnimationFrame(1,0),
+            new SpriteAnimationFrame(2,0),
+            new SpriteAnimationFrame(3,0),
+            new SpriteAnimationFrame(4,0),
+            new SpriteAnimationFrame(5,0),
+            new SpriteAnimationFrame(6,0),
+            new SpriteAnimationFrame(7,0),
+            new SpriteAnimationFrame(8,0)
+    );
+
+    SpriteMap appleMap = new SpriteMap(this.getResources(), R.drawable.apple, 64, 64, 64, 64);
 
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -55,66 +73,63 @@ public class GameView extends SurfaceView implements Runnable {
     private void setup() {
         holder = getHolder();
 
-        SpriteLayer backgroundLayer = new SpriteLayer(0, "background");
-        SpriteLayer gameLayer = new SpriteLayer(1, "game");
-        SpriteLayer guiLayer = new SpriteLayer(2, "gui");
-
         engine.addLayer(backgroundLayer);
         engine.addLayer(gameLayer);
         engine.addLayer(guiLayer);
 
         centipede = new ArrayList<>();
 
-        SpriteMap centipedeHead = new SpriteMap(this.getResources(), R.drawable.centipede_head, 64, 64, 64, 64);
-        Sprite centipedeHeadSprite = new SpriteStatic(centipedeHead);
-        centipedeHeadSprite.setSize(128, 128);
+        SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 1280, 128, 128, 128);
+        centipedeHeadSprite = new SpriteStatic(centipedeMap);
         centipedeHeadSprite.setzIndex(0);
         centipedeHeadSprite.setRotation(targetAngle);
         gameLayer.addDrawable(centipedeHeadSprite);
         centipede.add(centipedeHeadSprite);
         centipedeHeadSprite.moveCenter(new PointF(400, 600));
 
-        SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 512, 64, 64, 64);
-        for (int i = 1; i < 19; i++) {
-            SpriteAnimated centipedeBody = new SpriteAnimated(centipedeMap, Arrays.asList(
-                    new SpriteAnimationFrame(0,0),
-                    new SpriteAnimationFrame(64,0),
-                    new SpriteAnimationFrame(128,0),
-                    new SpriteAnimationFrame(192,0),
-                    new SpriteAnimationFrame(256,0),
-                    new SpriteAnimationFrame(320,0),
-                    new SpriteAnimationFrame(384,0),
-                    new SpriteAnimationFrame(448,0)
-            ));
-            centipedeBody.setCurrentFrame(i % centipedeBody.getAnimationSequence().size());
-            centipedeBody.setzIndex(-i);
-            centipedeBody.setSize(128, 128);
-            centipedeBody.setRotation(targetAngle);
-            centipedeBody.moveCenter(new PointF(400, 600 + centipedeBody.getFrame().height() / 3 * i));
-
-            gameLayer.addDrawable(centipedeBody);
-
-            centipede.add(centipedeBody);
-        }
-
-        SpriteMap centipedeTail = new SpriteMap(this.getResources(), R.drawable.centipede_tail, 64, 64, 64, 64);
-        Sprite centipedeTailSprite = new SpriteStatic(centipedeTail);
-        centipedeTailSprite.setSize(128, 128);
-        centipedeTailSprite.setzIndex(-20);
+        Sprite centipedeTailSprite = new SpriteStatic(centipedeMap, 9, 0);
+        centipedeTailSprite.setzIndex(-1);
         centipedeTailSprite.setRotation(targetAngle);
         gameLayer.addDrawable(centipedeTailSprite);
         centipede.add(centipedeTailSprite);
         centipedeTailSprite.moveCenter(new PointF(400, 1450));
 
+        for (int i = 1; i < 9; i++) {
+            addBodySegment();
+        }
 
         fpsLabel = new Label("FPS: 0", new Point(20,40), Color.GREEN, 36);
-        logAngle = new Label("", new Point(20,80), Color.BLACK, 36);
-        logDA = new Label("", new Point(20,120), Color.BLACK, 36);
-        logTot = new Label("", new Point(20,160), Color.BLACK, 36);
         guiLayer.addDrawable(fpsLabel);
-        guiLayer.addDrawable(logAngle);
-        guiLayer.addDrawable(logDA);
-        guiLayer.addDrawable(logTot);
+    }
+
+    public void addBodySegment() {
+        Sprite last = centipede.get(centipede.size() - 1);
+        Sprite nextToLast = centipede.get(centipede.size() - 2);
+
+        SpriteMap centipedeMap = new SpriteMap(this.getResources(), R.drawable.centipede, 1280, 128, 128, 128);
+
+        SpriteAnimated centipedeBody = new SpriteAnimated(centipedeMap, bodyAnimationSequence);
+
+        if (nextToLast.getClass() == SpriteAnimated.class) {
+            centipedeBody.setCurrentFrame((((SpriteAnimated) nextToLast).getCurrentFrame() + 1) % bodyAnimationSequence.size());
+        }
+        centipedeBody.setzIndex(last.getzIndex());
+        centipedeBody.setRotation(last.getRotation());
+        centipedeBody.moveCenter(new PointF(last.getFrame().centerX(), last.getFrame().centerY()));
+
+        gameLayer.addDrawable(centipedeBody);
+
+        centipede.add(centipede.size() - 1, centipedeBody);
+
+        last.setzIndex(last.getzIndex() - 1);
+    }
+
+    public void addApple() {
+        Sprite apple = new SpriteStatic(appleMap);
+        apple.setzIndex(-1);
+        gameLayer.addDrawable(apple);
+        apple.moveCenter(new PointF(1800 * (float)Math.random(), 900 * (float)Math.random()));
+
     }
 
     @Override
@@ -147,6 +162,12 @@ public class GameView extends SurfaceView implements Runnable {
         if (isMoving) {
             updateDirectionAndPosition();
         }
+
+        timeToNextApple -= frameTime;
+        if(timeToNextApple < 0) {
+            addApple();
+            timeToNextApple = (long)(7000 * Math.random() + 3000);
+        }
     }
 
     public void draw() {
@@ -177,9 +198,6 @@ public class GameView extends SurfaceView implements Runnable {
     private void updateDirectionAndPosition() {
         Sprite head = centipede.get(0);
         float twopi = (float)(2 * Math.PI);
-
-        logAngle.setText("Head angle: " + head.getRotation());
-        logDA.setText("Target angle: " + targetAngle);
 
         float da = (targetAngle - head.getRotation() + twopi) % twopi;
 

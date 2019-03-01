@@ -51,9 +51,11 @@ public class SpriteAnimated extends Sprite {
                 ? animationSequence.get(animationSequence.size() - nextFrame - 1)
                 : animationSequence.get(nextFrame);
 
-        this.getSubFrame().set(animationFrame.x, animationFrame.y,
-                animationFrame.x + this.getSubFrame().width(),
-                animationFrame.y + this.getSubFrame().height());
+        int left = animationFrame.x * this.getSpriteMap().getFrameWidth();
+        int top = animationFrame.y * this.getSpriteMap().getFrameHeight();
+        this.getSubFrame().set(left, top,
+                left + this.getSubFrame().width(),
+                top + this.getSubFrame().height());
     }
 
     public List<SpriteAnimationFrame> getAnimationSequence() {

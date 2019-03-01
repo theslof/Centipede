@@ -6,6 +6,7 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Log;
 
 public abstract class Sprite implements SpriteEngine.Drawable {
     private SpriteMap spriteMap;
@@ -19,7 +20,18 @@ public abstract class Sprite implements SpriteEngine.Drawable {
     Sprite(SpriteMap spriteMap, int mapX, int mapY, int width, int height) {
         this.spriteMap = spriteMap;
         this.frame.set(0,0, width, height);
-        this.subFrame.set(mapX, mapY, spriteMap.getFrameWidth(), spriteMap.getFrameHeight());
+        int left = mapX * spriteMap.getFrameWidth();
+        int top = mapY * spriteMap.getFrameHeight();
+        this.subFrame.set(
+                left,
+                top,
+                left + spriteMap.getFrameWidth(),
+                top + spriteMap.getFrameHeight());
+        Log.d("Sprite", "Created sprite: \nleft: " + this.subFrame.left
+                + "\ntop: " + this.subFrame.top
+                + "\nright: " + this.subFrame.right
+                + "\nbottom: " + this.subFrame.bottom
+        );
     }
 
     public void update(long frameTime) {
