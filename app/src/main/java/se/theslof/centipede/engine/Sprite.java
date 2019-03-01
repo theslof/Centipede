@@ -27,11 +27,6 @@ public abstract class Sprite implements SpriteEngine.Drawable {
                 top,
                 left + spriteMap.getFrameWidth(),
                 top + spriteMap.getFrameHeight());
-        Log.d("Sprite", "Created sprite: \nleft: " + this.subFrame.left
-                + "\ntop: " + this.subFrame.top
-                + "\nright: " + this.subFrame.right
-                + "\nbottom: " + this.subFrame.bottom
-        );
     }
 
     public void update(long frameTime) {

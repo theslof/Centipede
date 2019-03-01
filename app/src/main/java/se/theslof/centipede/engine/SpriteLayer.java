@@ -57,6 +57,10 @@ public class SpriteLayer {
         drawables.sort((SpriteEngine.Drawable s1, SpriteEngine.Drawable s2) -> s1.getzIndex() - s2.getzIndex());
     }
 
+    public void removeDrawable(SpriteEngine.Drawable drawable) {
+        drawables.remove(drawable);
+    }
+
     public boolean isHidden() {
         return hidden;
     }

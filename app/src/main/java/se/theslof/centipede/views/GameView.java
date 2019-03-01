@@ -33,6 +33,7 @@ public class GameView extends SurfaceView implements Runnable {
     private long frameTime;
     SpriteEngine engine = new SpriteEngine();
     List<Sprite> centipede;
+    List<Sprite> apples = new ArrayList<>();
     Label fpsLabel;
     boolean isMoving = true;
     float speed = 250;
@@ -128,6 +129,7 @@ public class GameView extends SurfaceView implements Runnable {
         Sprite apple = new SpriteStatic(appleMap);
         apple.setzIndex(-1);
         gameLayer.addDrawable(apple);
+        apples.add(apple);
         apple.moveCenter(new PointF(1800 * (float)Math.random(), 900 * (float)Math.random()));
 
     }
@@ -138,6 +140,8 @@ public class GameView extends SurfaceView implements Runnable {
             long startFrameTime = System.currentTimeMillis();
 
             update();
+
+            checkCollisions();
 
             draw();
 
@@ -167,6 +171,18 @@ public class GameView extends SurfaceView implements Runnable {
         if(timeToNextApple < 0) {
             addApple();
             timeToNextApple = (long)(7000 * Math.random() + 3000);
+        }
+    }
+
+    public void checkCollisions() {
+        for (int i = 0; i < apples.size(); i++) {
+            Sprite apple = apples.get(i);
+
+            if (apple.getFrame().intersect(centipedeHeadSprite.getFrame())) {
+                addBodySegment();
+                apples.remove(apple);
+                gameLayer.removeDrawable(apple);
+            }
         }
     }
 
